@@ -163,14 +163,14 @@ LineState GetParentRelationship(const Dot& dot)
 	}
 }
 
-std::list<Dot> RemoveDotsThatAreOnTheSamePoint(const std::list<Dot>& dots)
+std::list<Dot> RemoveDotsThatAreOnTheSamePoint(const std::list<Dot>& dotsToProcess, const std::list<Dot>& dots)
 {
 	// another rule is that if two dots have the same coordinates they should be excluded.
 	// N^2 baby.
 
 	// First get all the dots that point to the same point.
 	std::list<std::tuple<int, int>> dotsToRemove{};
-	for (auto& dotToProcess : dots)
+	for (auto& dotToProcess : dotsToProcess)
 	{
 		for (auto& dotAgainToProcess : dots)
 		{
@@ -191,7 +191,7 @@ std::list<Dot> RemoveDotsThatAreOnTheSamePoint(const std::list<Dot>& dots)
 	}
 
 	// Remove.
-	std::list<Dot> toReturn{ dots };
+	std::list<Dot> toReturn{ dotsToProcess };
 	for (auto& dotToRemove : dotsToRemove)
 	{
 		toReturn.remove_if([dotToRemove](Dot dot)
@@ -348,7 +348,7 @@ static std::list<Dot> MakeDots(int width, int heigth, int numberOfRounds)
 	// -2 already made two rounds above.
 	for (int currentRound = 0; currentRound < (numberOfRounds - 2); currentRound++)
 	{
-		dotsToProcess = RemoveDotsThatAreOnTheSamePoint(dotsToProcess);
+		dotsToProcess = RemoveDotsThatAreOnTheSamePoint(dotsToProcess, dots);
 		dotsToProcess = RemoveViceVersaDots(dotsToProcess);
 		dotsToProcess = RemoveDotsThatWouldCrossTheLine(dotsToProcess, dots);
 		std::list<Dot> tempDotsToAdd{};

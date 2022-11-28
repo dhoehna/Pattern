@@ -61,6 +61,8 @@ namespace winrt::TheRealTree::implementation
 				MyStackPanel().Children().Append(myLine);
 			}
 		}
+
+		currentRound++;
 	}
 
 	void MainWindow::DrawCurrentRoundAsTransparent()
@@ -80,12 +82,15 @@ namespace winrt::TheRealTree::implementation
 				MyStackPanel().Children().Append(myLine);
 			}
 		}
+
+		currentRound++;
 	}
 
 	void MainWindow::RemoveCurrentRound()
 	{
 		winrt::Microsoft::UI::Xaml::Media::SolidColorBrush myBrush(winrt::Windows::UI::ColorHelper::FromArgb(255, 0, 0, 0));
 
+		currentRound--;
 		size_t numberOfLinesToRemove{ roundsToDots[currentRound].size() };
 
 		for (size_t counter = 0; counter < numberOfLinesToRemove; counter++)
@@ -118,16 +123,13 @@ namespace winrt::TheRealTree::implementation
 			// Remove transparent preview
 			if (currentRound > 1)
 			{
-				currentRound--;
 				RemoveCurrentRound();
 			}
 
 			DrawCurrentRound();
-			currentRound++;
 
 			// show a "Preview"
 			DrawCurrentRoundAsTransparent();
-			currentRound++;
 		}
 		else if (keyEventArgs.Key() == winrt::Windows::System::VirtualKey::Down)
 		{
@@ -138,7 +140,6 @@ namespace winrt::TheRealTree::implementation
 			}
 
 			// Remove transparent preview.
-			currentRound--;
 			RemoveCurrentRound();
 
 			if (currentRound == 1)
@@ -147,12 +148,10 @@ namespace winrt::TheRealTree::implementation
 			}
 
 			// Remove current row in the UI.
-			currentRound--;
 			RemoveCurrentRound();
 
 			// re-add preview
 			DrawCurrentRoundAsTransparent();
-			currentRound++;
 		}
 	}
 
