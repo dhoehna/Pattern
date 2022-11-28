@@ -15,7 +15,6 @@ namespace winrt::TheRealTree::implementation
         void OnKeyDownHandler(Windows::Foundation::IInspectable const& sender, winrt::Microsoft::UI::Xaml::Input::KeyRoutedEventArgs const& KeyEventArgs);
         void DrawCurrentRound();
         void RemoveCurrentRound();
-        void DrawCurrentRoundAsTransparent();
     };
 }
 

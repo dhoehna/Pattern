@@ -19,140 +19,78 @@ using namespace Microsoft::UI::Xaml;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-			/* winrt::Microsoft::UI::Xaml::Shapes::Line horizontalPlus{};
-			 horizontalPlus.Stroke(myBrush);
-			 horizontalPlus.X1(dot.x - plusLength);
-			 horizontalPlus.X2(dot.x + plusLength);
-			 horizontalPlus.Y1(dot.y);
-			 horizontalPlus.Y2(dot.y);
-			 MyStackPanel().Children().Append(horizontalPlus);
-
-			 winrt::Microsoft::UI::Xaml::Shapes::Line verticalPlus{};
-			 verticalPlus.Stroke(myBrush);
-			 verticalPlus.X1(dot.x);
-			 verticalPlus.X2(dot.x);
-			 verticalPlus.Y1(dot.y + plusLength);
-			 verticalPlus.Y2(dot.y - plusLength);
-			 MyStackPanel().Children().Append(verticalPlus);*/
-			 //}
-
 namespace winrt::TheRealTree::implementation
 {
 
-	std::map<int, std::list<Dot>> roundsToDots{};
-	int currentRound{ 1 };
-	int numberOfRounds{ 30 };
+    std::map<int, std::list<Dot>> roundsToDots{};
+    std::map<int, std::list<winrt::Microsoft::UI::Xaml::Shapes::Line>> roundToLineCollection{};
+    int currentRound{ 1 };
+    int numberOfRounds{ 60 };
 
 
-	void MainWindow::DrawCurrentRound()
-	{
-		winrt::Microsoft::UI::Xaml::Media::SolidColorBrush myBrush(winrt::Windows::UI::ColorHelper::FromArgb(255, 0, 0, 0));
-		auto dotsToDraw{ roundsToDots[currentRound] };
-		for (auto dot : dotsToDraw)
-		{
-			if (dot.previous.get() != nullptr)
-			{
-				winrt::Microsoft::UI::Xaml::Shapes::Line myLine{};
-				myLine.Stroke(myBrush);
-				myLine.X1(dot.x);
-				myLine.X2(dot.previous->x);
-				myLine.Y1(dot.y);
-				myLine.Y2(dot.previous->y);
-				MyStackPanel().Children().Append(myLine);
-			}
-		}
+    void MainWindow::DrawCurrentRound()
+    {
+        for (auto&& line : roundToLineCollection[currentRound])
+        {
+            line.Visibility(winrt::Microsoft::UI::Xaml::Visibility::Visible);
+        }
 
-		currentRound++;
-	}
+        currentRound++;
+    }
 
-	void MainWindow::DrawCurrentRoundAsTransparent()
-	{
-		winrt::Microsoft::UI::Xaml::Media::SolidColorBrush myBrush(winrt::Windows::UI::ColorHelper::FromArgb(100, 0, 0, 0));
-		auto dotsToDraw{ roundsToDots[currentRound] };
-		for (auto dot : dotsToDraw)
-		{
-			if (dot.previous.get() != nullptr)
-			{
-				winrt::Microsoft::UI::Xaml::Shapes::Line myLine{};
-				myLine.Stroke(myBrush);
-				myLine.X1(dot.x);
-				myLine.X2(dot.previous->x);
-				myLine.Y1(dot.y);
-				myLine.Y2(dot.previous->y);
-				MyStackPanel().Children().Append(myLine);
-			}
-		}
+    void MainWindow::RemoveCurrentRound()
+    {
+        currentRound--;
+        for (auto&& line : roundToLineCollection[currentRound])
+        {
+            line.Visibility(winrt::Microsoft::UI::Xaml::Visibility::Collapsed);
+        }
+    }
 
-		currentRound++;
-	}
+    MainWindow::MainWindow()
+    {
+        InitializeComponent();
+        auto dots{ MakeDots(static_cast<int>(MyStackPanel().ActualWidth()), static_cast<int>(MyStackPanel().ActualHeight()), numberOfRounds) };
 
-	void MainWindow::RemoveCurrentRound()
-	{
-		winrt::Microsoft::UI::Xaml::Media::SolidColorBrush myBrush(winrt::Windows::UI::ColorHelper::FromArgb(255, 0, 0, 0));
+        winrt::Microsoft::UI::Xaml::Media::SolidColorBrush myBrush(winrt::Windows::UI::ColorHelper::FromArgb(255, 0, 0, 0));
+        for (auto& dot : dots)
+        {
+            if (dot.previous.get() != nullptr)
+            {
+                winrt::Microsoft::UI::Xaml::Shapes::Line myLine{};
+                myLine.Stroke(myBrush);
+                myLine.X1(dot.x);
+                myLine.X2(dot.previous->x);
+                myLine.Y1(dot.y);
+                myLine.Y2(dot.previous->y);
+                myLine.Visibility(winrt::Microsoft::UI::Xaml::Visibility::Collapsed);
+                roundToLineCollection[dot.round].push_back(myLine);
+                MyStackPanel().Children().Append(myLine);
+            }
+        }
+    }
 
-		currentRound--;
-		size_t numberOfLinesToRemove{ roundsToDots[currentRound].size() };
+    void MainWindow::OnKeyDownHandler([[maybe_unused]] winrt::Windows::Foundation::IInspectable const& sender, winrt::Microsoft::UI::Xaml::Input::KeyRoutedEventArgs const& keyEventArgs)
+    {
+        if (keyEventArgs.Key() == winrt::Windows::System::VirtualKey::Up)
+        {
+            if (currentRound == numberOfRounds)
+            {
+                return;
+            }
 
-		for (size_t counter = 0; counter < numberOfLinesToRemove; counter++)
-		{
-			MyStackPanel().Children().RemoveAtEnd();
-		}
-	}
+            DrawCurrentRound();
+        }
+        else if (keyEventArgs.Key() == winrt::Windows::System::VirtualKey::Down)
+        {
+            if (currentRound <= 1)
+            {
+                currentRound = 1;
+                return;
+            }
 
-	MainWindow::MainWindow()
-	{
-		InitializeComponent();
-		[[maybe_unused]] int plusLength{ 5 };
-		auto dots{ MakeDots(static_cast<int>(MyStackPanel().ActualWidth()), static_cast<int>(MyStackPanel().ActualHeight()), numberOfRounds) };
-		winrt::Microsoft::UI::Xaml::Media::SolidColorBrush myBrush(winrt::Windows::UI::ColorHelper::FromArgb(255, 0, 0, 0));
-		for (auto& dot : dots)
-		{
-			roundsToDots[dot.round].push_back(dot);
-		}
-	}
-
-	void MainWindow::OnKeyDownHandler([[maybe_unused]] winrt::Windows::Foundation::IInspectable const& sender, winrt::Microsoft::UI::Xaml::Input::KeyRoutedEventArgs const& keyEventArgs)
-	{
-		if (keyEventArgs.Key() == winrt::Windows::System::VirtualKey::Up)
-		{
-			if (currentRound == numberOfRounds)
-			{
-				return;
-			}
-			
-			// Remove transparent preview
-			if (currentRound > 1)
-			{
-				RemoveCurrentRound();
-			}
-
-			DrawCurrentRound();
-
-			// show a "Preview"
-			DrawCurrentRoundAsTransparent();
-		}
-		else if (keyEventArgs.Key() == winrt::Windows::System::VirtualKey::Down)
-		{
-			if (currentRound <= 1)
-			{
-				currentRound = 1;
-				return;
-			}
-
-			// Remove transparent preview.
-			RemoveCurrentRound();
-
-			if (currentRound == 1)
-			{
-				return;
-			}
-
-			// Remove current row in the UI.
-			RemoveCurrentRound();
-
-			// re-add preview
-			DrawCurrentRoundAsTransparent();
-		}
-	}
+            RemoveCurrentRound();
+        }
+    }
 
 }
